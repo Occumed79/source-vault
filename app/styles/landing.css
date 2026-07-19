@@ -1,0 +1,258 @@
+.docbox-landing {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  place-items: center;
+  background:
+    radial-gradient(circle at 52% 44%, rgba(58, 141, 154, 0.24), transparent 34%),
+    linear-gradient(145deg, #061827 0%, #0B2D3D 46%, #061827 100%);
+  color: #D7F2F0;
+  cursor: pointer;
+  isolation: isolate;
+}
+
+.docbox-landing:focus-visible {
+  outline: 2px solid rgba(215, 242, 240, 0.9);
+  outline-offset: -8px;
+}
+
+.docbox-landing::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+  background:
+    linear-gradient(135deg, transparent 0 17%, rgba(58, 141, 154, 0.08) 17% 21%, transparent 21% 77%, rgba(58, 141, 154, 0.07) 77% 82%, transparent 82%),
+    linear-gradient(45deg, transparent 0 24%, rgba(215, 242, 240, 0.04) 24% 27%, transparent 27% 71%, rgba(15, 76, 92, 0.13) 71% 75%, transparent 75%);
+}
+
+.docbox-landing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 35%, rgba(2, 11, 18, 0.12) 62%, rgba(2, 8, 14, 0.55) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 20%, transparent 80%, rgba(0, 0, 0, 0.18));
+}
+
+.docbox-landing-art {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transform: scale(1.015);
+  transition: opacity 500ms ease, transform 7s ease;
+}
+
+.docbox-landing-art.loaded {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.docbox-landing-fallback {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 2vh, 20px);
+  text-align: center;
+  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.36));
+}
+
+.docbox-landing-art.loaded + .docbox-landing-fallback {
+  opacity: 0;
+}
+
+.docbox-landing-logo {
+  display: block;
+  width: min(320px, 48vw);
+  max-height: 160px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.docbox-landing-wordmark {
+  font-size: clamp(22px, 3.4vw, 52px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.docbox-landing-fallback strong {
+  font-size: clamp(54px, 10vw, 136px);
+  font-weight: 300;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+
+.landing-circuit-glow {
+  position: absolute;
+  z-index: 1;
+  width: 54vw;
+  height: 54vw;
+  min-width: 520px;
+  min-height: 520px;
+  border: 1px solid rgba(135, 229, 235, 0.2);
+  border-radius: 18%;
+  opacity: 0.2;
+  filter: drop-shadow(0 0 16px rgba(90, 207, 218, 0.55));
+  transform: rotate(45deg);
+  animation: landing-circuit-pulse 8s ease-in-out infinite;
+}
+
+.landing-circuit-glow::before,
+.landing-circuit-glow::after {
+  content: "";
+  position: absolute;
+  inset: 9%;
+  border: 1px solid rgba(215, 242, 240, 0.14);
+  border-radius: inherit;
+}
+
+.landing-circuit-glow::after {
+  inset: 22%;
+  border-color: rgba(58, 141, 154, 0.32);
+}
+
+.circuit-glow-one {
+  top: -38vw;
+  left: -23vw;
+}
+
+.circuit-glow-two {
+  right: -28vw;
+  bottom: -37vw;
+  animation-delay: -4s;
+}
+
+.landing-light-sweep {
+  position: absolute;
+  z-index: 2;
+  width: 20vw;
+  height: 160vh;
+  top: -30vh;
+  background: linear-gradient(90deg, transparent, rgba(139, 239, 246, 0.08), rgba(215, 242, 240, 0.18), transparent);
+  filter: blur(20px);
+  transform: rotate(33deg);
+  opacity: 0;
+  animation: landing-sweep 10s ease-in-out infinite;
+}
+
+.landing-light-sweep-one {
+  left: -28vw;
+}
+
+.landing-light-sweep-two {
+  left: 42vw;
+  animation-delay: -5s;
+}
+
+.landing-particle-field {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.landing-particle {
+  position: absolute;
+  top: var(--landing-top);
+  left: var(--landing-left);
+  width: var(--landing-size);
+  height: var(--landing-size);
+  border-radius: 50%;
+  background: #D7F2F0;
+  box-shadow:
+    0 0 calc(var(--landing-size) * 2) rgba(215, 242, 240, 0.95),
+    0 0 calc(var(--landing-size) * 5) rgba(58, 141, 154, 0.86),
+    0 0 calc(var(--landing-size) * 10) rgba(15, 76, 92, 0.62);
+  opacity: 0.28;
+  animation: landing-particle-float var(--landing-duration) ease-in-out var(--landing-delay) infinite;
+}
+
+.landing-enter-hint {
+  position: absolute;
+  z-index: 12;
+  left: 50%;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: rgba(215, 242, 240, 0.78);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: landing-hint 2.4s ease-in-out infinite;
+}
+
+.landing-enter-hint i {
+  display: block;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(180deg, rgba(215, 242, 240, 0.9), transparent);
+}
+
+@keyframes landing-circuit-pulse {
+  0%, 100% { opacity: 0.12; transform: rotate(45deg) scale(0.98); }
+  50% { opacity: 0.3; transform: rotate(45deg) scale(1.025); }
+}
+
+@keyframes landing-sweep {
+  0% { opacity: 0; transform: translateX(-25vw) rotate(33deg); }
+  20% { opacity: 0.55; }
+  62% { opacity: 0.16; }
+  100% { opacity: 0; transform: translateX(125vw) rotate(33deg); }
+}
+
+@keyframes landing-particle-float {
+  0%, 100% { opacity: 0.16; transform: translate3d(0, 0, 0) scale(0.7); }
+  45% { opacity: 0.95; transform: translate3d(18px, -20px, 0) scale(1.08); }
+  70% { opacity: 0.42; transform: translate3d(34px, -8px, 0) scale(0.9); }
+}
+
+@keyframes landing-hint {
+  0%, 100% { opacity: 0.52; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+}
+
+@media (max-width: 700px) {
+  .docbox-landing-art {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .docbox-landing-logo {
+    width: min(260px, 64vw);
+  }
+
+  .landing-enter-hint {
+    width: 100%;
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-circuit-glow,
+  .landing-light-sweep,
+  .landing-particle,
+  .landing-enter-hint,
+  .docbox-landing-art {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .landing-light-sweep {
+    display: none;
+  }
+}

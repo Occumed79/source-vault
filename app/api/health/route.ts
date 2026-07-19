@@ -9,7 +9,7 @@ export async function GET() {
     const [database] = await query('SELECT current_database() AS database_name, NOW() AS checked_at');
     return NextResponse.json({
       ok: true,
-      service: 'source-vault',
+      service: 'docbox',
       database: database?.database_name || 'connected',
       checkedAt: database?.checked_at || new Date().toISOString(),
     });
@@ -17,7 +17,7 @@ export async function GET() {
     console.error('Database health check failed:', error);
     return NextResponse.json({
       ok: false,
-      service: 'source-vault',
+      service: 'docbox',
       error: error instanceof Error ? error.message : 'Database health check failed.',
     }, { status: 503 });
   }
