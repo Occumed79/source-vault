@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
 import { formatDate, formatSize, type VaultFile } from './file-model';
 import FilePreviewModal from './FilePreviewModal';
@@ -60,12 +60,12 @@ function isImageFile(file: File) {
   return file.type.startsWith('image/') || isImageType(extension(file.name));
 }
 
-function isPdfFile(file: File) {
-  return file.type === 'application/pdf' || extension(file.name) === 'pdf';
-}
-
 function isTextFile(file: File) {
   return file.type.startsWith('text/') || isTextType(extension(file.name));
+}
+
+function directImageUrl(file: VaultFile) {
+  return isImageType(file.file_type) && file.storage_url ? file.storage_url : null;
 }
 
 export default function FileGallery({
@@ -153,7 +153,7 @@ export default function FileGallery({
     if (errors.length) {
       onError(`${errors.length} ${errors.length === 1 ? 'file' : 'files'} could not be uploaded.`);
     } else if (lastUploaded) {
-      setOpenPreview({ file: lastUploaded, url: null });
+      setOpenPreview({ file: lastUploaded, url: directImageUrl(lastUploaded) });
     }
   }, [folderId, onError, onUploaded, queued, uploading]);
 
@@ -220,7 +220,7 @@ export default function FileGallery({
               <StoredPreviewTile
                 key={file.id}
                 file={file}
-                onOpen={(previewUrl) => setOpenPreview({ file, url: previewUrl })}
+                onOpen={() => setOpenPreview({ file, url: directImageUrl(file) })}
                 onDetails={() => onDetails(file)}
               />
             ))}
@@ -228,8 +228,8 @@ export default function FileGallery({
         ) : queued.length === 0 ? (
           <div className="gallery-empty-state">
             <div className="gallery-empty-stack" aria-hidden="true"><span /><span /><span /></div>
-            <h2>Your vault is empty</h2>
-            <p>Drop files anywhere in this area or use the single Add Files control above.</p>
+            <h2>Your DocBox is empty</h2>
+            <p>Drop files anywhere in this area or use Add Files above.</p>
           </div>
         ) : null}
       </section>
@@ -245,70 +245,29 @@ export default function FileGallery({
   );
 }
 
-function StoredPreviewTile({ file, onOpen, onDetails }: {
+const StoredPreviewTile = memo(function StoredPreviewTile({ file, onOpen, onDetails }: {
   file: VaultFile;
-  onOpen: (url: string | null) => void;
+  onOpen: () => void;
   onDetails: () => void;
 }) {
-  const tileRef = useRef<HTMLElement | null>(null);
-  const [visible, setVisible] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewError, setPreviewError] = useState(false);
   const type = file.file_type.toLowerCase();
 
-  useEffect(() => {
-    const node = tileRef.current;
-    if (!node || typeof IntersectionObserver === 'undefined') {
-      setVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) {
-        setVisible(true);
-        observer.disconnect();
-      }
-    }, { rootMargin: '240px' });
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!visible || previewUrl || previewError) return;
-    const controller = new AbortController();
-
-    fetch(`/api/preview?id=${encodeURIComponent(file.id)}`, { signal: controller.signal })
-      .then(async response => {
-        if (!response.ok) throw new Error('Preview unavailable.');
-        return response.json();
-      })
-      .then(data => setPreviewUrl(data?.url || null))
-      .catch(error => {
-        if (error?.name !== 'AbortError') setPreviewError(true);
-      });
-
-    return () => controller.abort();
-  }, [file.id, previewError, previewUrl, visible]);
-
-  const openTile = () => onOpen(previewUrl);
-
   return (
-    <article ref={tileRef} className="file-preview-tile">
+    <article className="file-preview-tile">
       <div
         className="file-preview-open"
         role="button"
         tabIndex={0}
-        onClick={openTile}
+        onClick={onOpen}
         onKeyDown={event => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            openTile();
+            onOpen();
           }
         }}
         aria-label={`Preview ${file.name}`}
       >
-        <StoredPreviewContent file={file} type={type} url={previewUrl} error={previewError} />
+        <StoredPreviewContent file={file} type={type} />
         <span className="preview-open-label">Open preview</span>
       </div>
       <footer className="file-preview-caption">
@@ -317,26 +276,33 @@ function StoredPreviewTile({ file, onOpen, onDetails }: {
       </footer>
     </article>
   );
-}
+});
 
-function StoredPreviewContent({ file, type, url, error }: { file: VaultFile; type: string; url: string | null; error: boolean }) {
-  if (isImageType(type) && url) {
-    return <span className="gallery-preview-surface image-surface">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={url} alt="" loading="lazy" /></span>;
+function StoredPreviewContent({ file, type }: { file: VaultFile; type: string }) {
+  const extracted = (file.extracted_text || '').trim();
+
+  if (isImageType(type) && file.storage_url) {
+    return (
+      <span className="gallery-preview-surface image-surface">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={file.storage_url} alt="" loading="lazy" decoding="async" />
+      </span>
+    );
   }
 
-  if (type === 'pdf' && url) {
-    return <span className="gallery-preview-surface pdf-surface"><iframe src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`} title={`First page of ${file.name}`} tabIndex={-1} /></span>;
+  if (extracted) {
+    return <span className="gallery-preview-surface text-surface"><span className="gallery-paper"><pre>{extracted}</pre></span></span>;
   }
 
-  if ((isTextType(type) || file.extracted_text) && (file.extracted_text || '').trim()) {
-    return <span className="gallery-preview-surface text-surface"><span className="gallery-paper"><pre>{file.extracted_text}</pre></span></span>;
-  }
-
-  if (!url && !error) {
-    return <span className="gallery-preview-surface gallery-preview-loading"><span className="spinner" /></span>;
-  }
-
-  return <span className="gallery-preview-surface document-surface"><span className="gallery-document-sheet"><b>{type.toUpperCase() || 'FILE'}</b><i /><i /><i /><small>{file.original_name}</small></span></span>;
+  return (
+    <span className={`gallery-preview-surface document-surface ${type === 'pdf' ? 'pdf-cover-surface' : ''}`}>
+      <span className="gallery-document-sheet">
+        <b>{type.toUpperCase() || 'FILE'}</b>
+        <i /><i /><i />
+        <small>{file.original_name}</small>
+      </span>
+    </span>
+  );
 }
 
 function LocalPreviewTile({ file, disabled, onRemove }: { file: File; disabled: boolean; onRemove: () => void }) {
@@ -348,7 +314,7 @@ function LocalPreviewTile({ file, disabled, onRemove }: { file: File; disabled: 
     let objectUrl: string | null = null;
     let active = true;
 
-    if (isImageFile(file) || isPdfFile(file)) {
+    if (isImageFile(file)) {
       objectUrl = URL.createObjectURL(file);
       setUrl(objectUrl);
     } else if (isTextFile(file)) {
@@ -365,13 +331,16 @@ function LocalPreviewTile({ file, disabled, onRemove }: { file: File; disabled: 
     <article className="file-preview-tile staged-tile">
       <div className="file-preview-open staged-preview-content">
         {isImageFile(file) && url ? (
-          <span className="gallery-preview-surface image-surface">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={url} alt="" /></span>
-        ) : isPdfFile(file) && url ? (
-          <span className="gallery-preview-surface pdf-surface"><iframe src={`${url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1`} title={`First page of ${file.name}`} tabIndex={-1} /></span>
+          <span className="gallery-preview-surface image-surface">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" decoding="async" />
+          </span>
         ) : isTextFile(file) && text ? (
           <span className="gallery-preview-surface text-surface"><span className="gallery-paper"><pre>{text}</pre></span></span>
         ) : (
-          <span className="gallery-preview-surface document-surface"><span className="gallery-document-sheet"><b>{type.toUpperCase()}</b><i /><i /><i /><small>{file.name}</small></span></span>
+          <span className={`gallery-preview-surface document-surface ${type === 'pdf' ? 'pdf-cover-surface' : ''}`}>
+            <span className="gallery-document-sheet"><b>{type.toUpperCase()}</b><i /><i /><i /><small>{file.name}</small></span>
+          </span>
         )}
         <span className="staged-badge">Staged</span>
       </div>
