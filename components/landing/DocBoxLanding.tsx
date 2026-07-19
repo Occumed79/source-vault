@@ -16,6 +16,7 @@ type Particle = {
   size: number;
   delay: number;
   duration: number;
+  twinkleDuration: number;
   driftX: number;
   driftY: number;
   opacity: number;
@@ -41,19 +42,23 @@ function createParticles(kind: ParticleKind, count: number, seed: number): Parti
     bloom: { minSize: 8, maxSize: 15, minDuration: 9, maxDuration: 20, minOpacity: 0.2, maxOpacity: 0.72, drift: 26, blur: 1.6 },
   }[kind];
 
-  return Array.from({ length: count }, (_, index) => ({
-    id: `${kind}-${index}`,
-    kind,
-    top: random() * 100,
-    left: random() * 100,
-    size: settings.minSize + random() * (settings.maxSize - settings.minSize),
-    delay: -(random() * settings.maxDuration),
-    duration: settings.minDuration + random() * (settings.maxDuration - settings.minDuration),
-    driftX: (random() - 0.5) * settings.drift,
-    driftY: -(12 + random() * settings.drift),
-    opacity: settings.minOpacity + random() * (settings.maxOpacity - settings.minOpacity),
-    blur: settings.blur + random() * settings.blur,
-  }));
+  return Array.from({ length: count }, (_, index) => {
+    const duration = settings.minDuration + random() * (settings.maxDuration - settings.minDuration);
+    return {
+      id: `${kind}-${index}`,
+      kind,
+      top: random() * 100,
+      left: random() * 100,
+      size: settings.minSize + random() * (settings.maxSize - settings.minSize),
+      delay: -(random() * settings.maxDuration),
+      duration,
+      twinkleDuration: 2.6 + random() * 5.4,
+      driftX: (random() - 0.5) * settings.drift,
+      driftY: -(12 + random() * settings.drift),
+      opacity: settings.minOpacity + random() * (settings.maxOpacity - settings.minOpacity),
+      blur: settings.blur + random() * settings.blur,
+    };
+  });
 }
 
 const PARTICLE_LAYERS = [
@@ -115,6 +120,7 @@ export default function DocBoxLanding() {
                   '--landing-size': `${particle.size}px`,
                   '--landing-delay': `${particle.delay}s`,
                   '--landing-duration': `${particle.duration}s`,
+                  '--landing-twinkle-duration': `${particle.twinkleDuration}s`,
                   '--landing-drift-x': `${particle.driftX}px`,
                   '--landing-drift-y': `${particle.driftY}px`,
                   '--landing-opacity': particle.opacity,
