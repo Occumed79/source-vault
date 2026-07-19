@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState, type CSSProperties, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, type CSSProperties, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
+
+const LANDING_ART = '/docbox-landing.png?v=20260719-0931';
 
 const LIGHTS = [
   [8, 14, 4, 0, 9], [12, 73, 6, -4, 12], [19, 35, 3, -7, 11], [24, 89, 5, -2, 14],
@@ -12,8 +14,6 @@ const LIGHTS = [
 
 export default function DocBoxLanding() {
   const router = useRouter();
-  const [artLoaded, setArtLoaded] = useState(false);
-  const [logoLoaded, setLogoLoaded] = useState(true);
   const lights = useMemo(() => LIGHTS, []);
 
   useEffect(() => {
@@ -39,26 +39,14 @@ export default function DocBoxLanding() {
       onKeyDown={handleKeyDown}
     >
       <img
-        className={artLoaded ? 'docbox-landing-art loaded' : 'docbox-landing-art'}
-        src="/docbox-landing.png"
+        className="docbox-landing-art"
+        src={LANDING_ART}
         alt=""
         aria-hidden="true"
-        onLoad={() => setArtLoaded(true)}
-        onError={() => setArtLoaded(false)}
+        loading="eager"
+        decoding="sync"
+        fetchPriority="high"
       />
-
-      <div className="docbox-landing-fallback" aria-hidden={artLoaded}>
-        {logoLoaded && (
-          <img
-            className="docbox-landing-logo"
-            src="/occu-med-logo.png"
-            alt=""
-            onError={() => setLogoLoaded(false)}
-          />
-        )}
-        {!logoLoaded && <span className="docbox-landing-wordmark">OCCU-MED</span>}
-        <strong>DocBox</strong>
-      </div>
 
       <div className="landing-circuit-glow circuit-glow-one" aria-hidden="true" />
       <div className="landing-circuit-glow circuit-glow-two" aria-hidden="true" />
@@ -78,11 +66,6 @@ export default function DocBoxLanding() {
             } as CSSProperties}
           />
         ))}
-      </div>
-
-      <div className="landing-enter-hint" aria-hidden="true">
-        <span>Click anywhere to enter</span>
-        <i />
       </div>
     </main>
   );
