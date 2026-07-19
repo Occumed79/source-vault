@@ -1,5 +1,5 @@
-import VaultApp from '@/components/vault/VaultApp';
+import DocBoxLanding from '@/components/landing/DocBoxLanding';
 
 export default function Home() {
-  return <VaultApp />;
+  return <DocBoxLanding />;
 }
