@@ -87,7 +87,7 @@ export default function SearchBar({ onResults, onClear, onError }: Props) {
             </svg>
           )}
         </span>
-        <label className="sr-only" htmlFor="vault-search">Search Source Vault</label>
+        <label className="sr-only" htmlFor="vault-search">Search DocBox</label>
         <input
           id="vault-search"
           ref={inputRef}
@@ -123,7 +123,7 @@ export default function SearchBar({ onResults, onClear, onError }: Props) {
         </div>
       )}
 
-      <span className="sr-only" aria-live="polite">{loading ? 'Searching Source Vault' : ''}</span>
+      <span className="sr-only" aria-live="polite">{loading ? 'Searching DocBox' : ''}</span>
     </div>
   );
 }
