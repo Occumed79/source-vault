@@ -12,6 +12,7 @@ import './styles/stage-integration.css';
 import './styles/gallery.css';
 import './styles/abyssal-overlays.css';
 import './styles/landing.css';
+import './styles/landing-liquid.css';
 import './styles/docbox-polish.css';
 
 export const metadata: Metadata = {
