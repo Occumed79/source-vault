@@ -7,6 +7,7 @@ const TRAIL_RIPPLE_LIFETIME = 940;
 const PRESS_RIPPLE_LIFETIME = 1250;
 
 let landingAudioContext: AudioContext | null = null;
+let landingSoundEnabled = false;
 
 type AudioWindow = typeof window & {
   webkitAudioContext?: typeof AudioContext;
@@ -124,6 +125,12 @@ export default function LandingLiquidEffects() {
     const landing = document.querySelector<HTMLElement>('.docbox-landing');
     if (!landing) return;
 
+    const soundButton = document.createElement('button');
+    soundButton.type = 'button';
+    soundButton.className = 'landing-sound-toggle';
+    soundButton.innerHTML = '<span class="landing-sound-wave" aria-hidden="true"><i></i><i></i><i></i></span><span>Sound</span>';
+    document.body.appendChild(soundButton);
+
     const layer = document.createElement('div');
     layer.className = 'landing-liquid-layer';
     layer.setAttribute('aria-hidden', 'true');
@@ -131,12 +138,20 @@ export default function LandingLiquidEffects() {
     landing.appendChild(layer);
     landing.dataset.pointerActive = 'false';
 
-    let audioUnlocked = false;
+    let audioUnlocked = landingAudioContext?.state === 'running';
+    let soundEnabled = landingSoundEnabled;
     let soundTravel = 0;
     let lastSound = 0;
     let lastPointer = { x: 0, y: 0, initialized: false };
     let lastTrail = { x: -1000, y: -1000, time: 0 };
     const rippleTimers = new Set<number>();
+
+    const updateSoundButton = () => {
+      soundButton.setAttribute('aria-pressed', soundEnabled ? 'true' : 'false');
+      soundButton.setAttribute('aria-label', soundEnabled ? 'Disable liquid glass sound' : 'Enable liquid glass sound');
+      soundButton.dataset.enabled = soundEnabled ? 'true' : 'false';
+    };
+    updateSoundButton();
 
     const setPointerPosition = (x: number, y: number, active: boolean) => {
       landing.style.setProperty('--landing-pointer-x', `${x}px`);
@@ -191,7 +206,7 @@ export default function LandingLiquidEffects() {
         lastTrail = { x, y, time: now };
       }
 
-      if (audioUnlocked) {
+      if (audioUnlocked && soundEnabled) {
         soundTravel += movement;
         if (soundTravel >= 150 && now - lastSound >= 680) {
           playLiquidGlassChime(0.28);
@@ -227,11 +242,19 @@ export default function LandingLiquidEffects() {
       if (!audioUnlocked) unlockAndPlay(0.88);
     };
 
+    const handleSoundToggle = () => {
+      soundEnabled = !soundEnabled;
+      landingSoundEnabled = soundEnabled;
+      updateSoundButton();
+      if (soundEnabled) unlockAndPlay(0.76);
+    };
+
     landing.addEventListener('pointermove', handlePointerMove);
     landing.addEventListener('pointerdown', handlePointerDown);
     landing.addEventListener('pointerleave', handlePointerLeave);
     landing.addEventListener('keydown', handleKeyDown, true);
     landing.addEventListener('click', handleClick, true);
+    soundButton.addEventListener('click', handleSoundToggle);
 
     return () => {
       landing.removeEventListener('pointermove', handlePointerMove);
@@ -239,8 +262,10 @@ export default function LandingLiquidEffects() {
       landing.removeEventListener('pointerleave', handlePointerLeave);
       landing.removeEventListener('keydown', handleKeyDown, true);
       landing.removeEventListener('click', handleClick, true);
+      soundButton.removeEventListener('click', handleSoundToggle);
       rippleTimers.forEach(timer => window.clearTimeout(timer));
       layer.remove();
+      soundButton.remove();
       landing.dataset.pointerActive = 'false';
       landing.style.removeProperty('--landing-pointer-x');
       landing.style.removeProperty('--landing-pointer-y');
